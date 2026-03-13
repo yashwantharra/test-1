@@ -1,0 +1,36 @@
+name: Push Nginx Docker Image to ECR
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-2
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build Docker image
+        run: |
+          docker build -t my-project-testing .
+
+      - name: Tag Docker image
+        run: |
+          docker tag my-project-testing:latest 162026159099.dkr.ecr.ap-south-2.amazonaws.com/my-project-testing:latest
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push 162026159099.dkr.ecr.ap-south-2.amazonaws.com/my-project-testing:latest
