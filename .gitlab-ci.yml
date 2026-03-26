@@ -1,0 +1,27 @@
+stages:
+ - build
+ - push
+ 
+variables:
+ IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+ 
+build-and-push:
+ stage: build
+ image: docker:latest
+ services:
+ - docker:dind
+ script:
+ - apk add --no-cache python3 py3-pip
+ - pip3 install awscli
+ 
+ # Login to ECR
+ - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPO_URI
+ 
+ # Build image
+ - docker build -t $ECR_REPO_URI:$IMAGE_TAG .
+ - docker tag $ECR_REPO_URI:$IMAGE_TAG $ECR_REPO_URI:latest
+ 
+ # Push image
+ - docker push $ECR_REPO_URI:$IMAGE_TAG
+ - docker push $ECR_REPO_URI:latest
+ 
